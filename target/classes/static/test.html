@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>websocket通讯</title>
+</head>
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
+<script>
+    var socket;
+    //开启连接
+    function openSocket() {
+        if(typeof(WebSocket) == "undefined") {
+            console.log("您的浏览器不支持WebSocket");
+        }else{
+            if (!$("#fromUserId").val()){
+                alert("请输入用户名");
+                return;
+            }
+            console.log("您的浏览器支持WebSocket");
+            //实现化WebSocket对象，指定要连接的服务器地址与端口  建立连接
+            //等同于socket = new WebSocket("ws://localhost:8888/xxxx/im/25");
+            //var socketUrl="${request.contextPath}/im/"+$("#userId").val();
+            var socketUrl="http://localhost:8080/ws/"+$("#fromUserId").val();
+            socketUrl=socketUrl.replace("https","ws").replace("http","ws");
+            console.log(socketUrl);
+            if(socket!=null){
+                socket.close();
+                socket=null;
+            }
+            socket = new WebSocket(socketUrl);
+            //打开事件
+            socket.onopen = function() {
+                console.log("websocket已打开");
+                $("#allContent")
+                    .append("<div>" + "收到消息:已建立连接,"+new Date() + "</div>");
+            };
+            //获得消息事件
+            socket.onmessage = function(msg) {
+                $("#allContent")
+                    .append("<div>" + "收到消息" +":"+msg.data + "</div>");
+                console.log(msg.data);
+            };
+            //关闭事件
+            socket.onclose = function() {
+                $("#allContent")
+                    .append("<div>" + "收到消息:websocket已关闭,"+new Date() + "</div>");
+                console.log("websocket已关闭");
+            };
+            //发生了错误事件
+            socket.onerror = function() {
+                $("#allContent")
+                    .append("<div>" + "收到消息:websocket连接发生了错误,"+new Date() + "</div>");
+                console.log("websocket发生了错误");
+            }
+        }
+    }
+    // 关闭连接
+    function closeSocket() {
+        if (socket){
+            socket.disconnect();
+        }
+    }
+    // 发送消息
+    function sendMessage() {
+        if(typeof(WebSocket) == "undefined") {
+            console.log("您的浏览器不支持WebSocket");
+        }else {
+            // 判断是否已建立连接
+            if (socket){
+                socket.send('{"toUserId":"'+$("#toUserId").val()+'","contentText":"'+$("#contentText").val()+'"}');
+            }else {
+                alert("请先建立连接");
+            }
+
+        }
+    }
+</script>
+<body>
+【请输入用户名】：<input id="fromUserId" name="fromUserId" type="text" value="admin"/>
+【目标用户名】：<input id="toUserId" name="toUserId" type="text" value="qxf"/>
+<button onclick="openSocket()"  style="color:red;">开启连接</button>
+<button onclick="closeSocket()"  style="color:red;">关闭连接</button>
+<button onclick="sendMessage()" style="color:blue;">发送消息</button>
+ 【内容】：<input id="contentText" name="contentText" type="text" value="hello websocket">
+ <div id="allContent">
+
+ </div>
+</body>
+
+</html>
